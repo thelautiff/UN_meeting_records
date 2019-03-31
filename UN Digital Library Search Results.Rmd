@@ -1,0 +1,245 @@
+---
+title: "Investigating United Nations meeting records"
+author: "Tiffany Lau"
+output: html_document
+bibliography: bib.xml
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Carrying out a search
+
+The first step is to carry out a search at the [United Nations Digital Library website](https://digitallibrary.un.org/). Since, at the time of writing, the United Nations Digital Library had just updated their website (which was having some teething problems), the button at the bottom of each page which lets you export your search results is missing/broken. Your best bet is to get in touch with the amazing librarians with your search query [here](https://library.un.org/content/contact-us-0) (thank you Geraldo).
+
+If you want some metadata, you'll need to specify which fields you'd like using [MARC records](https://www.un.org/depts/dhl/unbisref_manual/index.htm).
+
+Some helpful ones are as follows:
+
+* 029 - Job number
+* 191 - UN Document Symbol
+* 245 - Title
+* 500 - General Note
+* 520 - Summary
+* 546 - Language Note
+* 591 - Vote Note
+* 991 - Agenda Information
+* 830 - Series
+* 260 - Imprint
+* 981,989 - Collections
+* 089 - Type of Material
+* 269 - Publication Date
+
+If you end up with what I got, you'll get a link to the search for your topic of interest, as well as spreadsheet with the link to each search result stored in a hyperlink. If so, you can use [this](https://superuser.com/questions/593492/can-i-use-an-excel-formula-to-extract-the-link-location-of-a-hyperlink-in-a-cell) to extract your hyperlinks and add it to a new column in your spreadsheet.
+
+Now you've got your spreadsheet, save it as a `.csv`, and you can move on to the next step.
+
+##Scraping pdfs from the search results
+
+First of all, set your working directory.
+
+If you're on a mac, right click on the folder containing the csv of your search results, hold down the alt key, select `Copy as Pathname`, then use the `setwd` function like so:
+
+```{r set working directory}
+setwd("~/Desktop/UN_meeting_records")
+```
+
+Next, you'll need to load the following packages using the `library` function. If you haven't already installed them, you'll need to use `install.packages` with the name of the package in double quotation marks.
+
+```{r message=FALSE}
+#install.packages("rvest")
+library(rvest)
+library(dplyr)
+library(tidyr) 
+library(readtext)
+library(stringr)
+library(quanteda)
+```
+
+###Read your csv of search results
+
+The first argument of `read.csv` is your file name and extention, setting `header` to `TRUE` takes the first row of your spreadsheet as the column names, and setting `stringsAsFactors` to `FALSE` stops R from importing your data as categorical variables.
+
+If your search results contain things that are not meeting records, use the second line of code below to keep only the meeting records. (MARC record 89 refers to the type of material- B03 indicates meeting records.)
+
+```{r read csv}
+sr <- read.csv("results.csv", header=TRUE, stringsAsFactors = FALSE) 
+sr <- sr[grep("B03", sr$X89, ignore.case=TRUE),]
+```
+
+###An aside on html
+
+If you want to learn more about html, [w3schools](https://www.w3schools.com/html/) is an excellent resource.
+
+For now, all you need is [SelectorGadget](https://selectorgadget.com/) to extract the pdf download links. For the UN library search results, the html node you want is `strong +a`.
+
+##Downloading the pdfs
+
+Now you need to download all the pdfs from your search results.
+
+First, create a new empty column in your data frame (I called it h), then use `rvest` in a loop to read the html from the links to each search result to extract the links to the pdfs you want, then add it to the new column.
+
+```{r scrape download links}
+sr$h <- 0
+
+#In my data frame, the column containing the links is called 'links'.
+for (i in 1:length(sr$links)){ 
+ h <-
+    read_html((sr$links)[i])%>% 
+    html_node("strong +a") %>%
+    html_attrs()
+  sr$h[i] <- h
+} 
+```
+
+If you need to, you can use `drop_na` from the `tidyr` package to remove missing values:
+
+```{r drop na}
+sr <- sr %>% drop_na(h)
+```
+
+The links to the pdfs do not contain the full URL you need, so manually paste on the rest of the link:
+
+```{r get full url}
+sr$h <- paste0("https://digitallibrary.un.org", sr$h)
+```
+
+Now you can download all the pdfs using `download.file`.
+
+The first argument of the function is the url, which comes from your column of urls above.
+
+The second argument is the:
+
+1. Path name for the folder in which you want to store all your pdf documents, follwed by 
+2. the file names (I've arbitrarily used the numbers in my column `X1` as the file names), and lastly
+3. the extention of the files, which is `.pdf`,
+
+which I've concatenated together with no separators using `paste0`.
+
+```{r download files}
+for (i in 1:nrow(sr)){
+  download.file(sr$h[i], paste0("~/Desktop/UN_meeting_records/pdfs/",sr$X1[i],".pdf"))
+}
+```
+
+##Converting pdfs to txt files
+
+Sadly, R cannot read pdf files, so you'll have to convert them to txt files first. To do so, you'll need to:
+
+1. Open a window in Finder, hit `Command+Shift+G`, type in _/usr/local/bin_, and hit 'Go'.
+2. Download [xpdfreader](https://www.xpdfreader.com/download.html).
+3. From the xpdf folder you just downloaded, drag and drop the `pdftotext.exe` file into your _/usr/local/bin_ folder.
+4. Run the following code (credit to [Ben](https://stackoverflow.com/questions/21445659/use-r-to-convert-pdf-files-to-text-files-for-text-mining)'s Stack Overflow answer):
+
+
+```{r results='hide'}
+#The first argument of list.files() is the file path of the folder containing all your pdf documents.
+files <- list.files(path = "~/Desktop/UN_meeting_records/pdfs", 
+                      pattern = "pdf",
+                      full.names = TRUE)
+
+lapply(files, function(i) system(paste("/usr/local/bin/pdftotext", paste0('"', i, '"')), wait = FALSE) )
+```
+
+The txt files will appear in the same folder containing your pdf files. I then moved them to another folder which I called txt.
+
+#Separating out the speeches
+
+Each United Nations meeting record starts with a cover page/introduction section, followed by a series of speeches made by attendees of a meeting. Each new speech starts with a number, followed by a period, a space, then 'Ms.', 'Mrs.', or 'Mr.', another space, and then, if the speaker's organisation is listed, it is contained with parentheses. 
+
+That is the 'anchor' I'll use to split up each txt file into separate speeches.
+
+What the code below does is:
+
+1. List the txt files (or 'documents').
+2. Create an empty list.
+3. Get the path name of every document and use `readtext` to read it into R (with the file name as a document variable, which I call _job.number_).
+4. Use some [regex dark magic](http://www.zytrax.com/tech/web/regex.htm) and `strsplit` to split the documents into individual speeches.
+5. Create a data frame with one row per speech (except the first 'speech', which is the title page), with columns for the document name, the text of the speech, the job number, the name of the speaker, the organisation of the speaker, and the title page.
+
+```{r message=FALSE}
+fls <- list.files("~/Desktop/UN_meeting_records/txt")
+df <- list()
+
+for (f in fls){
+  message(f)
+  files <- readtext(paste0("~/Desktop/UN_meeting_records/txt/", f),
+         docvarsfrom = "filenames",
+         docvarnames = "job.number"
+         )
+  docs <- strsplit(files$text, split="\\n(?=[0-9]+\\.\\s((Mr|Ms)|Mrs))", perl=TRUE)
+  cleandocs <- docs[[1]][2:length(docs[[1]])] #I refer to the text of the speeches as 'cleandocs'- completely arbitrary
+
+  #creating the necessary entries for the data frame
+  title <- docs[[1]][1] 
+  jobno <- files$job.number
+  doc_id <- str_extract_all(cleandocs, "((Mr|Ms)|Mrs)(.*?)\\)+")
+  names <- sub("\\s\\(","",(str_extract_all(cleandocs, "((Mr|Ms)|Mrs)(.*?)\\(")))
+  orgs <- sub("\\)$","",sub("^\\(","",str_extract(str_extract(cleandocs, "((Mr|Ms)|Mrs)(.*?)\\)+"),"\\(.*\\)")))
+
+  df[[f]] <- data.frame(f, cleandocs, jobno, names, orgs, title, stringsAsFactors = FALSE)
+}
+df <- do.call(rbind, df)
+
+```
+
+##Applying a dictionary
+
+For this part, we'll be using the `quanteda` package to carry out some basic analysis. For more information, see [the quanteda website](https://quanteda.io/reference/index.html).
+
+The first step is creating a [dictionary](https://quanteda.io/reference/dictionary.html) containing some topics you're interested in. 
+
+```{r creating dictionary}
+dict <- dictionary(list(racism=c("race", "racis*"))) #using regular expressions
+```
+
+Next, clean the data.
+
+Unfortunately, some of the pdf documents are very old, and didn't process properly. Not ideal, but I assume that such processing errors were not systematic enough to ruin such a preliminary and explatory analysis.
+
+```{r}
+df <- df[!is.na(df$names),] #remove NA in names
+df <- df[df$names!="character(0)",] #remove some sort of missing values in names
+df <- df[!is.na(df$orgs),] #remove NA in orgs
+df <- df[which(nchar(df$names)<20),] #remove names longer than 20 characters (error in processing)
+```
+
+To apply your dictionary to the data, you first have to convert your data frame into a `corpus`, which is the data object that `quanteta` uses. 
+
+The first argument of `corpus` is your data frame, and the second takes the column (variable) in which your texts of interest are contained.
+
+```{r}
+corp <- corpus(df, text_field="cleandocs")
+```
+
+You can check if your dictionary works with the `kwic` (i.e. keyword in context) function.
+
+The first argument is your corpus, the second is your dictionary, `window` is for you to state many words before and after the key word you'd like to see, and `valuetype` is the kind of pattern matching you'd like to use (regex, glob, or fixed). Play around with it a bit if you'd like.
+
+```{r}
+k <- kwic(corp, dict, window=5, valuetype="regex")
+k[sample(nrow(k), 10),]
+```
+
+Next, using the `dfm` function, convert the corpus to a document-feature matrix, which is a matrix with one document on each row, containing the count of each of the features (unique words, or 'types', to use the `quanteda` language) in a given document.
+
+I've converted all the text to lower case, removed the numbers and punctuation, removed the stopwords, and grouped them by organisation, so each 'document' is a combination of all the speeches by people from the same organisation.
+
+```{r}
+corpdfm <- dfm(corp, tolower = TRUE, remove_numbers = TRUE, remove_punct = TRUE, remove=stopwords("en"), groups = "orgs")
+```
+
+Finally, apply the dictionary using the `dfm_lookup` function. The first argument is your document-feature matrix, the second is your dictionary, `valuetype` is the kind of pattern matching you want to use, and I recommend setting `case_insensitive` to `TRUE`.
+
+Now you can use the `dfm_sort` function to sort the resulting document-feature matrix to see the interest groups speaking most about your topic of interest.
+
+```{r}
+dictdfm <- dfm_lookup(corpdfm, dict, valuetype="regex", case_insensitive = TRUE) #apply the dictionary 
+dictdfm <- dfm_sort(dictdfm, decreasing=TRUE, margin="documents")
+dictdfm[1:20,] #see the top 20
+```
+
+Good luck!
+
+##References
