@@ -1,0 +1,11 @@
+About Xpdf and XpdfReader. http://www.xpdfreader.com/about.html. Accessed 31 Mar. 2019.
+Benoit, Kenneth, et al. Readtext: Import and Handling for Plain and Formatted Text Files. 0.71, 2018. R-Packages, https://CRAN.R-project.org/package=readtext.
+HTML Tutorial. https://www.w3schools.com/html/. Accessed 31 Mar. 2019.
+“Quanteda: An R Package for the Quantitative Analysis of Textual Data.” The Journal of Open Source Software, 6 Oct. 2018, doi:10.21105/joss.00774.
+“R Web Scraping Tutorial with Rvest.” DataCamp Community, 27 Feb. 2018, https://www.datacamp.com/community/tutorials/r-web-scraping-rvest.
+SelectorGadget: Point and Click CSS Selectors. https://selectorgadget.com/. Accessed 31 Mar. 2019.
+“Use R to Convert PDF Files to Text Files for Text Mining.” Stack Overflow, https://stackoverflow.com/questions/21445659/use-r-to-convert-pdf-files-to-text-files-for-text-mining. Accessed 31 Mar. 2019.
+Wickham, Hadley, Romain François, et al. Dplyr: A Grammar of Data Manipulation. 0.8.0.1, 2019. R-Packages, https://CRAN.R-project.org/package=dplyr.
+Wickham, Hadley, Lionel Henry, et al. Tidyr: Easily Tidy Data with “spread()” and “Gather()” Functions. 0.8.3, 2019. R-Packages, https://CRAN.R-project.org/package=tidyr.
+Wickham, Hadley, and RStudio. Rvest: Easily Harvest (Scrape) Web Pages. 0.3.2, 2016. R-Packages, https://CRAN.R-project.org/package=rvest.
+---. Stringr: Simple, Consistent Wrappers for Common String Operations. 1.4.0, 2019. R-Packages, https://CRAN.R-project.org/package=stringr.
