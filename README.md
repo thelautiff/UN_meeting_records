@@ -12,6 +12,8 @@ How to:
 
 I had to do this for a project, so I thought I'd share my code to save someone else the pain of having to figure this out from scratch.
 
+Find the guide [here](https://github.com/thelautiff/UN_meeting_records/blob/master/UN%20Digital%20Library%20Search%20Results.Rmd) in an R Markdown file.
+
 I've included some random search results in the `results.csv` file for you to experiment with.
 
 This will be quite a detailed walkthrough; for a more advanced alternative try [this guide](http://pablobarbera.com/ECPR-SC104/code/11-data-in-PDFs.html) by Dr Pablo Barberá.
