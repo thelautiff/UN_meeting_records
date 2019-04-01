@@ -14,7 +14,7 @@ I had to do this for a project, so I thought I'd share my code to save someone e
 
 Find the guide [here](https://github.com/thelautiff/UN_meeting_records/blob/master/UN%20Digital%20Library%20Search%20Results.Rmd) (it's an R Markdown file). I've set the working directories in the Markdown file to make it work if you clone the whole respository to your ~/Desktop and run the code; the pdf and txt folders are empty and ready to receive downloads of the pdf files/converted txt files. If you'd like to see the nicely rendered html result of the Markdown file, you'll need to first clone/download the repository.
 
-(If you're too impatient to read the guide, the code in Part 1 converts your pdfs to txt files: all you need is a data frame/csv file with a column containing the links to the pdfs you want to download i.e. [this](https://digitallibrary.un.org/record/733519/files/A_HRC_21_NGO_67-EN.pdf) not [this](https://digitallibrary.un.org/record/733519?ln=en). Part 2 covers steps 4-7 above, but you'll need to have your txt files in the txt folder for it to work.
+If you're too impatient to read the guide, the code in [Part 1](Part 1.R) converts your pdfs to txt files: all you need is a data frame/csv file with a column containing the links to the pdfs you want to download i.e. [this](https://digitallibrary.un.org/record/733519/files/A_HRC_21_NGO_67-EN.pdf) not [this](https://digitallibrary.un.org/record/733519?ln=en). [Part 2](Part 2.R) covers steps 4-7 above, but you'll need to have your txt files in the txt folder for it to work.
 
 I've included some random search results in the `results.csv` file for you to experiment with.
 
