@@ -243,3 +243,5 @@ dictdfm[1:20,] #see the top 20
 Good luck!
 
 ##References
+
+[Bibliography](bib.xml)
