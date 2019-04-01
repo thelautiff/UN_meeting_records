@@ -1,8 +1,2 @@
 * linguist-vendored
-*.html linguist-vendored=false
-*.xml linguist-vendored=false
-*.csv linguist-vendored=false
-*.Rmd linguist-vendored=false
-*.R linguist-vendored=false
-*.Rmd linguist-language=R
-*.R linguist-language=R
+*.* linguist-language=R
