@@ -339,31 +339,31 @@ df &lt;- df[which(nchar(df$names)&lt;20),] #remove names longer than 20 characte
 <p>The first argument is your corpus, the second is your dictionary, <code>window</code> is for you to state many words before and after the key word you’d like to see, and <code>valuetype</code> is the kind of pattern matching you’d like to use (regex, glob, or fixed). Play around with it a bit if you’d like.</p>
 <pre class="r"><code>k &lt;- kwic(corp, dict, window=5, valuetype=&quot;regex&quot;)
 k[sample(nrow(k), 10),]</code></pre>
-<pre><code>##                                                                 
-##  [16523.txt.1, 1623]   still collaboratinG ui th the | racist  |
-##  [16021.txt.5, 1051] designs of the imperialists and | racists |
-##    [4644.txt.3, 908]                  was a, form of | racism  |
-##   [4644.txt.3, 2084]        68. The struggle against | racism  |
-##  [16523.txt.1, 2765]                the scourc; e of | racism  |
-##  [19567.txt.11, 297]           of the horrors of the | racist  |
-##    [4643.txt.1, 627]         on grounds of religion, |  race   |
-##   [4644.txt.1, 1606]     Elimination of All Forms of | Racial  |
-##   [4644.txt.3, 2005]         be taken to isolate the | racist  |
-##   [4643.txt.1, 1332]                   ; le a~ ainst | racism  |
-##                                                 
-##  rec; ime of f:outh                             
-##  . 53. The Soviet                               
-##  . IIis cotmtry remained steadfast              
-##  also required putting an end                   
-##  throu':':                                      
-##  regime of Pretoria-a regime which              
-##  , sex, caste or                                
-##  Discrimination and the International Convention
-##  regilnes. They must be                         
-##  for their unholy war against</code></pre>
+<pre><code>##                                                                          
+##   [4644.txt.5, 743]     the most brutal manifestations of |   racial    |
+##   [4644.txt.5, 681]     assist peoples still oppressed by |   racist    |
+##    [4643.txt.2, 59]        comfort to those who practised |   racism    |
+##   [4643.txt.3, 699]       Committee on the Elimination of |   Racial    |
+##  [4643.txt.1, 1188]     Nevertheless, Arab extremists and |   racists   |
+##  [4644.txt.3, 1361]               . In its Declaration of |    Races    |
+##   [4643.txt.4, 129]                origin. Because of its |   racist    |
+##  [16021.txt.5, 449] their legitimate struggle against the |   racist    |
+##   [4643.txt.5, 840]               people of Israel were a | multiracial |
+##  [4644.txt.3, 1340]                    . The roots of all |   racisn    |
+##                                     
+##  discrimination. It was also        
+##  regimes which flouted vith impunity
+##  in its most vicious forms          
+##  Discrimination the previous year in
+##  had lost no time in                
+##  and: G.acial Prejudice,            
+##  principles and its prejudices,     
+##  minority regime. If those          
+##  people. The features and           
+##  lay in the rrreed for</code></pre>
 <p>Next, using the <code>dfm</code> function, convert the corpus to a document-feature matrix, which is a matrix with one document on each row, containing the count of each of the features (unique words, or ‘types’, to use the <code>quanteda</code> language) in a given document.</p>
-<p>I’ve converted all the text to lower case, removed the numbers and punctuation, removed the stopwords, and grouped them by organisation, so each ‘document’ is a combination of all the speeches by people from the same organisation.</p>
-<pre class="r"><code>corpdfm &lt;- dfm(corp, tolower = TRUE, remove_numbers = TRUE, remove_punct = TRUE, remove=stopwords(&quot;en&quot;), groups = &quot;orgs&quot;)</code></pre>
+<p>I’ve converted all the text to lower case, removed the numbers and punctuation, removed the stopwords, and grouped them by organisation, so each ‘document’ is a combination of all the speeches by people from the same organisation. I also weighted the dfm by proportion, so that each row contains the proportion of the given feature in the document.</p>
+<pre class="r"><code>corpdfm &lt;- dfm(corp, tolower = TRUE, remove_numbers = TRUE, remove_punct = TRUE, remove=stopwords(&quot;en&quot;), groups = &quot;orgs&quot;) %&gt;% dfm_weight(&quot;prop&quot;)</code></pre>
 <p>Finally, apply the dictionary using the <code>dfm_lookup</code> function. The first argument is your document-feature matrix, the second is your dictionary, <code>valuetype</code> is the kind of pattern matching you want to use, and I recommend setting <code>case_insensitive</code> to <code>TRUE</code>.</p>
 <p>Now you can use the <code>dfm_sort</code> function to sort the resulting document-feature matrix to see the interest groups speaking most about your topic of interest.</p>
 <pre class="r"><code>dictdfm &lt;- dfm_lookup(corpdfm, dict, valuetype=&quot;regex&quot;, case_insensitive = TRUE) #apply the dictionary 
@@ -372,32 +372,33 @@ dictdfm[1:20,] #see the top 20</code></pre>
 <pre><code>## Document-feature matrix of: 20 documents, 1 feature (0.0% sparse).
 ## 20 x 1 sparse Matrix of class &quot;dfm&quot;
 ##                                      features
-## docs                                  racism
-##   Sudan                                   69
-##   Japan                                   53
-##   China                                   42
-##   Australia                               38
-##   Iraq                                    25
-##   Fiji                                    18
-##   Bangladesh                              17
-##   Qatar                                   13
-##   Democratic Yemen                        12
-##   Cyprus                                  11
-##   Lao People's Democratic Republic        10
-##   Pakistan                                 9
-##   Ukrainian Soviet Socialist Republic      9
-##   Benin                                    8
-##   Egypt                                    8
-##   Libyan Arab Jamahiriya                   8
-##   Iran                                     7
-##   Union of Soviet Socialist Republics      7
-##   Israel                                   6
-##   Jamaica                                  6</code></pre>
+## docs                                       racism
+##   Australia                           0.048407643
+##   Sudan                               0.045695364
+##   Fiji                                0.045569620
+##   Iran                                0.038461538
+##   Democratic Yemen                    0.024048096
+##   Japan                               0.020408163
+##   Iraq                                0.019470405
+##   Qatar                               0.018678161
+##   Bangladesh                          0.014886165
+##   China                               0.014198783
+##   Ecuador                             0.010799136
+##   Yemen                               0.010638298
+##   Ukrainian Soviet Socialist Republic 0.009966777
+##   Benin                               0.009756098
+##   Libyan Arab Jamahiriya              0.009216590
+##   Union of Soviet Socialist Republics 0.008951407
+##   Lao People's Democratic Republic    0.006988120
+##   Jamaica                             0.006066734
+##   Yugoslavia                          0.004357298
+##   Israel                              0.003738318</code></pre>
 <p>Good luck!</p>
 </div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p><a href="bib.xml">Bibliography</a></p>
 </div>
-<div id="references" class="section level1">
-<h1>References</h1>
 </div>
 
 

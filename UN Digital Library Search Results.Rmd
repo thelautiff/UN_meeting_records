@@ -224,10 +224,10 @@ k[sample(nrow(k), 10),]
 
 Next, using the `dfm` function, convert the corpus to a document-feature matrix, which is a matrix with one document on each row, containing the count of each of the features (unique words, or 'types', to use the `quanteda` language) in a given document.
 
-I've converted all the text to lower case, removed the numbers and punctuation, removed the stopwords, and grouped them by organisation, so each 'document' is a combination of all the speeches by people from the same organisation.
+I've converted all the text to lower case, removed the numbers and punctuation, removed the stopwords, and grouped them by organisation, so each 'document' is a combination of all the speeches by people from the same organisation. I also weighted the dfm by proportion, so that each row contains the proportion of the given feature in the document.
 
 ```{r}
-corpdfm <- dfm(corp, tolower = TRUE, remove_numbers = TRUE, remove_punct = TRUE, remove=stopwords("en"), groups = "orgs")
+corpdfm <- dfm(corp, tolower = TRUE, remove_numbers = TRUE, remove_punct = TRUE, remove=stopwords("en"), groups = "orgs") %>% dfm_weight("prop")
 ```
 
 Finally, apply the dictionary using the `dfm_lookup` function. The first argument is your document-feature matrix, the second is your dictionary, `valuetype` is the kind of pattern matching you want to use, and I recommend setting `case_insensitive` to `TRUE`.
